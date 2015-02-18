@@ -27,6 +27,9 @@ var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 
 var prettyHrtime = require('pretty-hrtime');
+var path = require('path');
+var fs = require('fs');
+var mkdirp = require('mkdirp');
 
 /**
  * Exports
@@ -49,8 +52,10 @@ function browserifyTask(options) {
     devMode: true
   });
 
+
+
   var bundler = browserify(options.entry, watchify.args)
-    .transform(sassify, {global: true, minify: options.devMode ? false : (options.minifyCSS || {}), rewriteUrl: options.rewriteCSSUrl})
+    .transform(sassify, {global: true, minify: options.devMode ? false : (options.minifyCSS || {}), rewriteUrl: rewriteUrl})
     .transform(debowerify, {global: true})
     .transform(dehtmlify, {global: true});
 
@@ -74,8 +79,8 @@ function browserifyTask(options) {
         .pipe(sourcemaps.init({loadMaps: true}))
         .pipe(sourcemaps.write('./'))
         .pipe(gulp.dest(options.outDir))
-        .on('end', end)
-        .pipe(livereload());
+        .pipe(livereload())
+        .on('end', end);
     } else {
       bundleStream
         .pipe(uglify({mangle: false}))
@@ -91,6 +96,22 @@ function browserifyTask(options) {
     var taskTime = process.hrtime(startTime);
     var prettyTime = prettyHrtime(taskTime);
     gutil.log('Bundled',gutil.colors.green(options.entry), 'to', gutil.colors.green(options.outFile), 'in', gutil.colors.magenta(prettyTime));
+  }
+
+  function rewriteUrl(url, filePath) {
+    if (url.indexOf('http://') == 0)
+      return url;
+    else if(url[0] !== '/') {
+      url = path.relative(process.cwd(), path.join(path.dirname(filePath), url));
+      if (url.indexOf('node_modules') === 0)
+        url = url.slice('node_modules'.length);
+    }
+    url = url.slice(1);
+    var data = fs.readFileSync(url);
+    mkdirp.sync(options.outDir + '/' + path.dirname(url));
+    fs.writeFileSync(options.outDir + '/' + url, data);
+    return url;
+
   }
 
   return bundle;
