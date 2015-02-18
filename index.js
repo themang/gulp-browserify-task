@@ -20,8 +20,7 @@ var gutil = require('gulp-util');
 var livereload = require('gulp-livereload');
 var uglify = require('gulp-uglify');
 var sourcemaps = require('gulp-sourcemaps');
-var notify = require('gulp-notify');
-var plumber = require('gulp-notify');
+var errorHandler = require('gulp-error-handler')('Browserify Error');
 
 // gulp helpers
 var source = require('vinyl-source-stream');
@@ -46,11 +45,12 @@ function browserifyTask(options) {
   options = _.defaults(options || {}, {
     entry: './client.js', 
     outFile: 'build.js',
-    outDir: './public'
+    outDir: './public',
+    devMode: true
   });
 
   var bundler = browserify(options.entry, watchify.args)
-    .transform(sassify, {global: true, minify: options.devMode ? false : {}})
+    .transform(sassify, {global: true, minify: options.devMode ? false : (options.minifyCSS || {})})
     .transform(debowerify, {global: true})
     .transform(dehtmlify, {global: true});
 
@@ -65,7 +65,7 @@ function browserifyTask(options) {
     startTime = process.hrtime();
     gutil.log('Bundling', gutil.colors.green(options.entry) + '...');
     var bundleStream = bundler.bundle()
-      .on('error', error)
+      .on('error', errorHandler)
       .pipe(source(options.outFile))
       .pipe(buffer());
 
@@ -91,19 +91,6 @@ function browserifyTask(options) {
     var taskTime = process.hrtime(startTime);
     var prettyTime = prettyHrtime(taskTime);
     gutil.log('Bundled',gutil.colors.green(options.entry), 'to', gutil.colors.green(options.outFile), 'in', gutil.colors.magenta(prettyTime));
-  }
-
-  function error() {
-    var args = Array.prototype.slice.call(arguments);
-
-    // Send error to notification center with gulp-notify
-    notify.onError({
-      title: "Compile Error",
-      message: "<%= error %>"
-    }).apply(this, args);
-
-    // Keep gulp from hanging on this task
-    this.emit('end');
   }
 
   return bundle;
