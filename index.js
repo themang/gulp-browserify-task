@@ -50,7 +50,7 @@ function browserifyTask(options) {
   });
 
   var bundler = browserify(options.entry, watchify.args)
-    .transform(sassify, {global: true, minify: options.devMode ? false : (options.minifyCSS || {})})
+    .transform(sassify, {global: true, minify: options.devMode ? false : (options.minifyCSS || {}), rewriteUrl: options.rewriteCSSUrl})
     .transform(debowerify, {global: true})
     .transform(dehtmlify, {global: true});
 
