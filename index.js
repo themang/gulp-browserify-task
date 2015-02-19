@@ -79,8 +79,9 @@ function browserifyTask(options) {
         .pipe(sourcemaps.init({loadMaps: true}))
         .pipe(sourcemaps.write('./'))
         .pipe(gulp.dest(options.outDir))
-        .pipe(livereload())
-        .on('end', end);
+        .on('end', end)
+        .pipe(livereload());
+        
     } else {
       bundleStream
         .pipe(uglify({mangle: false}))
