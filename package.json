@@ -1,6 +1,6 @@
 {
   "name": "gulp-browserify-bundle-task",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "A gulp task for browserifying",
   "main": "index.js",
   "scripts": {
