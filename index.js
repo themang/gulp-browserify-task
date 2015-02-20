@@ -106,8 +106,11 @@ function browserifyTask(options) {
       url = path.relative(process.cwd(), path.join(path.dirname(filePath), url));
       if (url.indexOf('node_modules') === 0)
         url = url.slice('node_modules'.length);
-    } else
+    }
+
+    if (url[0] === '/')
       url = url.slice(1);
+    
     var data = fs.readFileSync(url);
     mkdirp.sync(options.outDir + '/' + path.dirname(url));
     fs.writeFileSync(options.outDir + '/' + url, data);
